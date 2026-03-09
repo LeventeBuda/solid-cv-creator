@@ -34,6 +34,9 @@ const translations = {
     fontLabel: "Betűtípus",
     textColor: "Szöveg színe",
     lineColor: "Vonal színe",
+    dataMgmt: "Adatkezelés",
+    saveFile: "Mentés fájlba",
+    loadFile: "Betöltés",
   },
   en: {
     title: "CV Editor",
@@ -61,6 +64,9 @@ const translations = {
     fontLabel: "Font Style",
     textColor: "Text Color",
     lineColor: "Line Color",
+    dataMgmt: "Data Management",
+    saveFile: "Save to file",
+    loadFile: "Load file",
   },
 };
 
@@ -98,7 +104,7 @@ const fonts = [
   { name: "Írógép (Courier)", value: '"Courier Prime", monospace' },
 ];
 
-// --- Stílusok a szerkesztőhöz ---
+// --- Szerkesztő stílusok ---
 const labelStyle = {
   "font-size": "11px",
   "font-weight": "bold",
@@ -141,7 +147,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("ultra-final-v10");
+  const saved = localStorage.getItem("cv-pro-ultra-v1");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -149,13 +155,13 @@ const App: Component = () => {
       : {
           name: "Kovács János",
           role: "Szoftverfejlesztő",
-          email: "janos@pelda.hu",
+          email: "pelda@email.hu",
           phone: "+36 30 123 4567",
           linkedin: "",
           photo: null,
           photoSettings: { scale: 1.2, x: 0, y: 0 },
-          summary: "Ide írd a profilod...",
-          expertise: ["TypeScript"],
+          summary: "Írd ide a bemutatkozásod...",
+          expertise: ["TypeScript", "Solid.js"],
           education: [],
           experience: [],
           lang: "hu",
@@ -168,9 +174,10 @@ const App: Component = () => {
   const t = () => translations[cv().lang];
 
   createEffect(() =>
-    localStorage.setItem("ultra-final-v10", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-ultra-v1", JSON.stringify(cv())),
   );
 
+  // --- Műveletek ---
   const handlePhotoUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) {
@@ -191,6 +198,32 @@ const App: Component = () => {
       isCurrent: false,
     };
     setCv({ ...cv(), [type]: [newEntry, ...cv()[type]] });
+  };
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(cv(), null, 2);
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", `cv_data_${cv().lang}.json`);
+    linkElement.click();
+  };
+
+  const importData = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedData = JSON.parse(event.target?.result as string);
+          setCv(importedData);
+        } catch (err) {
+          alert("Hiba a fájl beolvasása közben!");
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
@@ -240,7 +273,43 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* Stílus */}
+        {/* Adatkezelés gombok */}
+        <div style={{ ...sectionBox, border: "1px dashed #4ade80" }}>
+          <label style={labelStyle}>{t().dataMgmt}</label>
+          <div style={{ display: "flex", gap: "10px", "margin-top": "10px" }}>
+            <button
+              onClick={exportData}
+              style={{
+                ...buttonStyle,
+                background: "#3b82f6",
+                flex: 1,
+                "font-size": "12px",
+              }}
+            >
+              📥 {t().saveFile}
+            </button>
+            <label
+              style={{
+                ...buttonStyle,
+                background: "#64748b",
+                flex: 1,
+                "font-size": "12px",
+                "text-align": "center",
+                cursor: "pointer",
+              }}
+            >
+              📤 {t().loadFile}
+              <input
+                type="file"
+                accept=".json"
+                onChange={importData}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Stílus beállítások */}
         <div style={{ ...sectionBox, border: `1px solid ${cv().accentColor}` }}>
           <label style={labelStyle}>{t().fontLabel}</label>
           <select
@@ -286,7 +355,7 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* Fotó & Adatok */}
+        {/* Személyes adatok */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
@@ -397,6 +466,7 @@ const App: Component = () => {
           />
         </div>
 
+        {/* Profil & Készségek */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().summaryTitle}</label>
           <textarea
@@ -460,6 +530,7 @@ const App: Component = () => {
           </div>
         </div>
 
+        {/* Tapasztalat & Tanulmányok */}
         <For each={["experience", "education"] as const}>
           {(type) => (
             <div style={sectionBox}>
@@ -582,6 +653,7 @@ const App: Component = () => {
             background: "#10b981",
             width: "100%",
             padding: "15px",
+            "margin-top": "20px",
           }}
         >
           {t().printBtn}
@@ -668,30 +740,30 @@ const App: Component = () => {
             </div>
           </header>
 
-          {/* 1. SZAKMAI PROFIL */}
-          <section style={{ "margin-top": "30px" }}>
-            <h3
-              style={{
-                color: cv().accentColor,
-                "border-bottom": `1px solid ${cv().lineColor}`,
-                "padding-bottom": "5px",
-                "text-transform": "uppercase",
-              }}
-            >
-              {t().summaryTitle}
-            </h3>
-            <p
-              style={{
-                "line-height": "1.6",
-                margin: 0,
-                "white-space": "pre-wrap",
-              }}
-            >
-              {cv().summary}
-            </p>
-          </section>
+          <Show when={cv().summary}>
+            <section style={{ "margin-top": "30px" }}>
+              <h3
+                style={{
+                  color: cv().accentColor,
+                  "border-bottom": `1px solid ${cv().lineColor}`,
+                  "padding-bottom": "5px",
+                  "text-transform": "uppercase",
+                }}
+              >
+                {t().summaryTitle}
+              </h3>
+              <p
+                style={{
+                  "line-height": "1.6",
+                  margin: 0,
+                  "white-space": "pre-wrap",
+                }}
+              >
+                {cv().summary}
+              </p>
+            </section>
+          </Show>
 
-          {/* 2. KÉSZSÉGEK */}
           <Show when={cv().expertise.length > 0}>
             <section style={{ "margin-top": "30px" }}>
               <h3
@@ -731,7 +803,6 @@ const App: Component = () => {
             </section>
           </Show>
 
-          {/* 3. TAPASZTALAT & 4. TANULMÁNYOK */}
           <For each={["experience", "education"] as const}>
             {(type) => (
               <section style={{ "margin-top": "30px" }}>
