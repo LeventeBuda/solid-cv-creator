@@ -20,11 +20,11 @@ const translations = {
     expertiseTitle: "Készségek",
     expTitle: "Szakmai tapasztalat",
     eduTitle: "Tanulmányok",
-    photoLabel: "Profilkép feltöltése",
+    photoLabel: "Profilkép",
     photoDelete: "✕ Törlés",
     zoom: "Nagyítás",
-    posX: "Vízszintes",
-    posY: "Függőleges",
+    posX: "X",
+    posY: "Y",
     addBtn: "Hozzáadás",
     current: "Jelenlegi",
     printBtn: "PDF Mentése",
@@ -33,13 +33,14 @@ const translations = {
     placeholderSkill: "Új készség...",
     styleTitle: "Megjelenés",
     fontLabel: "Betűtípus",
+    fontSizeLabel: "Betűméret",
     textColor: "Szöveg színe",
     lineColor: "Vonal színe",
     dataMgmt: "Adatkezelés",
     saveFile: "Mentés fájlba",
     loadFile: "Betöltés",
     privacyNote:
-      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk semmit.",
+      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage).",
   },
   en: {
     title: "CV Editor",
@@ -48,30 +49,30 @@ const translations = {
     email: "Email",
     phone: "Phone",
     linkedin: "LinkedIn link",
-    summaryTitle: "Professional Profile",
+    summaryTitle: "Profile",
     expertiseTitle: "Skills",
-    expTitle: "Work Experience",
+    expTitle: "Experience",
     eduTitle: "Education",
-    photoLabel: "Upload Photo",
+    photoLabel: "Photo",
     photoDelete: "✕ Delete",
     zoom: "Zoom",
-    posX: "Horizontal",
-    posY: "Vertical",
+    posX: "X",
+    posY: "Y",
     addBtn: "Add New",
     current: "Present",
     printBtn: "Save as PDF",
     placeholderTitle: "Company / School",
     placeholderSub: "Role / Degree",
     placeholderSkill: "New skill...",
-    styleTitle: "Style Settings",
-    fontLabel: "Font Style",
+    styleTitle: "Style",
+    fontLabel: "Font",
+    fontSizeLabel: "Font Size",
     textColor: "Text Color",
     lineColor: "Line Color",
-    dataMgmt: "Data Management",
-    saveFile: "Save to file",
-    loadFile: "Load file",
-    privacyNote:
-      "Privacy: Data is stored locally in your browser (LocalStorage); we do not collect any data.",
+    dataMgmt: "Data",
+    saveFile: "Save",
+    loadFile: "Load",
+    privacyNote: "Privacy: Data is stored locally.",
   },
 };
 
@@ -97,6 +98,7 @@ interface CVData {
   experience: Entry[];
   lang: "hu" | "en";
   fontFamily: string;
+  fontSize: number;
   accentColor: string;
   lineColor: string;
 }
@@ -150,7 +152,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-v10-final");
+  const saved = localStorage.getItem("cv-pro-v12-final");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -169,6 +171,7 @@ const App: Component = () => {
           experience: [],
           lang: "hu",
           fontFamily: '"Inter", sans-serif',
+          fontSize: 14,
           accentColor: "#3b82f6",
           lineColor: "#3b82f6",
         },
@@ -176,7 +179,7 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-v10-final", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-v12-final", JSON.stringify(cv())),
   );
 
   const handlePhotoUpload = (e: Event) => {
@@ -274,50 +277,38 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* --- ADATKEZELÉS --- */}
         <div style={sectionBox}>
-          <label style={labelStyle}>{t().dataMgmt}</label>
-          <div style={{ display: "flex", gap: "5px" }}>
-            <button
-              onClick={exportData}
-              style={{ ...buttonStyle, background: "#3b82f6", flex: 1 }}
+          <label style={labelStyle}>{t().styleTitle}</label>
+          <div style={{ "margin-bottom": "15px" }}>
+            <label style={labelStyle}>{t().fontLabel}</label>
+            <select
+              value={cv().fontFamily}
+              onChange={(e) =>
+                setCv({ ...cv(), fontFamily: e.currentTarget.value })
+              }
+              style={inputStyle}
             >
-              📥 {t().saveFile}
-            </button>
-            <label
-              style={{
-                ...buttonStyle,
-                background: "#64748b",
-                flex: 1,
-                "text-align": "center",
-                cursor: "pointer",
-              }}
-            >
-              📤 {t().loadFile}
-              <input
-                type="file"
-                accept=".json"
-                onChange={importData}
-                style={{ display: "none" }}
-              />
-            </label>
+              <For each={fonts}>
+                {(f) => <option value={f.value}>{f.name}</option>}
+              </For>
+            </select>
           </div>
-        </div>
-
-        {/* --- MEGJELENÉS (STÍLUSOK) --- */}
-        <div style={sectionBox}>
-          <label style={labelStyle}>{t().fontLabel}</label>
-          <select
-            value={cv().fontFamily}
-            onChange={(e) =>
-              setCv({ ...cv(), fontFamily: e.currentTarget.value })
-            }
-            style={{ ...inputStyle, "margin-bottom": "10px" }}
-          >
-            <For each={fonts}>
-              {(f) => <option value={f.value}>{f.name}</option>}
-            </For>
-          </select>
+          <div style={{ "margin-bottom": "15px" }}>
+            <label style={labelStyle}>
+              {t().fontSizeLabel} ({cv().fontSize}px)
+            </label>
+            <input
+              type="range"
+              min="10"
+              max="20"
+              step="0.5"
+              value={cv().fontSize}
+              onInput={(e) =>
+                setCv({ ...cv(), fontSize: parseFloat(e.currentTarget.value) })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
           <div
             style={{
               display: "grid",
@@ -350,7 +341,36 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* --- FOTÓ ÉS ADATOK --- */}
+        <div style={sectionBox}>
+          <label style={labelStyle}>{t().dataMgmt}</label>
+          <div style={{ display: "flex", gap: "5px" }}>
+            <button
+              onClick={exportData}
+              style={{ ...buttonStyle, background: "#3b82f6", flex: 1 }}
+            >
+              📥 {t().saveFile}
+            </button>
+            <label
+              style={{
+                ...buttonStyle,
+                background: "#64748b",
+                flex: 1,
+                "text-align": "center",
+                cursor: "pointer",
+              }}
+            >
+              📤 {t().loadFile}
+              <input
+                type="file"
+                accept=".json"
+                onChange={importData}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Alapadatok, Készségek, Tapasztalatok szekciók maradtak változatlanul az Index-szel fixálva */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
@@ -668,19 +688,8 @@ const App: Component = () => {
         >
           {t().printBtn}
         </button>
-        <div
-          style={{
-            "margin-top": "20px",
-            "font-size": "10px",
-            color: "#94a3b8",
-            "text-align": "center",
-          }}
-        >
-          {t().privacyNote}
-        </div>
       </aside>
 
-      {/* --- ELŐNÉZET --- */}
       <main
         style={{
           flex: 1,
@@ -695,12 +704,13 @@ const App: Component = () => {
           id="cv-paper"
           style={{
             width: "210mm",
-            "min-height": "297mm" /* Fix A4 magasság */,
+            "min-height": "297mm",
             height: "fit-content",
             background: "white",
-            padding: "60px",
+            padding: "20mm",
             color: "#1e293b",
             "font-family": cv().fontFamily,
+            "font-size": `${cv().fontSize}px`,
             "box-shadow": "0 10px 25px rgba(0,0,0,0.1)",
             position: "relative",
           }}
@@ -717,8 +727,8 @@ const App: Component = () => {
             <Show when={cv().photo}>
               <div
                 style={{
-                  width: "120px",
-                  height: "120px",
+                  width: "100px",
+                  height: "100px",
                   "border-radius": "50%",
                   border: `3px solid ${cv().lineColor}`,
                   overflow: "hidden",
@@ -739,7 +749,7 @@ const App: Component = () => {
               <h1
                 style={{
                   margin: 0,
-                  "font-size": "40px",
+                  "font-size": "2.5em",
                   color: cv().accentColor,
                 }}
               >
@@ -747,14 +757,14 @@ const App: Component = () => {
               </h1>
               <p
                 style={{
-                  "font-size": "20px",
+                  "font-size": "1.2em",
                   "font-weight": "bold",
                   margin: "5px 0",
                 }}
               >
                 {cv().role}
               </p>
-              <div style={{ "font-size": "14px", color: "#64748b" }}>
+              <div style={{ "font-size": "0.9em", color: "#64748b" }}>
                 {cv().email} | {cv().phone}
                 <Show when={cv().linkedin}>
                   <span> | {cv().linkedin.replace(/^https?:\/\//, "")}</span>
@@ -763,28 +773,37 @@ const App: Component = () => {
             </div>
           </header>
 
-          <section style={{ "margin-top": "25px" }}>
+          <section style={{ "margin-top": "20px" }}>
             <h3
               style={{
                 color: cv().accentColor,
                 "border-bottom": `1px solid ${cv().lineColor}`,
                 "text-transform": "uppercase",
+                "font-size": "1.1em",
               }}
             >
               {t().summaryTitle}
             </h3>
-            <p style={{ "white-space": "pre-wrap", margin: 0 }}>
+            <p
+              style={{
+                "white-space": "pre-wrap",
+                margin: 0,
+                "font-size": "1em",
+                "line-height": "1.5",
+              }}
+            >
               {cv().summary}
             </p>
           </section>
 
           <Show when={cv().expertise.length > 0}>
-            <section style={{ "margin-top": "25px" }}>
+            <section style={{ "margin-top": "20px" }}>
               <h3
                 style={{
                   color: cv().accentColor,
                   "border-bottom": `1px solid ${cv().lineColor}`,
                   "text-transform": "uppercase",
+                  "font-size": "1.1em",
                 }}
               >
                 {t().expertiseTitle}
@@ -793,8 +812,8 @@ const App: Component = () => {
                 style={{
                   display: "flex",
                   "flex-wrap": "wrap",
-                  gap: "8px",
-                  "margin-top": "10px",
+                  gap: "6px",
+                  "margin-top": "8px",
                 }}
               >
                 <For each={cv().expertise}>
@@ -802,9 +821,9 @@ const App: Component = () => {
                     <span
                       style={{
                         border: `1px solid ${cv().accentColor}`,
-                        padding: "4px 12px",
+                        padding: "3px 10px",
                         "border-radius": "15px",
-                        "font-size": "13px",
+                        "font-size": "0.85em",
                         color: cv().accentColor,
                       }}
                     >
@@ -818,24 +837,26 @@ const App: Component = () => {
 
           <For each={["experience", "education"] as const}>
             {(type) => (
-              <section style={{ "margin-top": "25px" }}>
+              <section style={{ "margin-top": "20px" }}>
                 <h3
                   style={{
                     color: cv().accentColor,
                     "border-bottom": `1px solid ${cv().lineColor}`,
                     "text-transform": "uppercase",
+                    "font-size": "1.1em",
                   }}
                 >
                   {type === "experience" ? t().expTitle : t().eduTitle}
                 </h3>
                 <For each={cv()[type]}>
                   {(item) => (
-                    <div style={{ "margin-bottom": "15px" }}>
+                    <div style={{ "margin-bottom": "12px" }}>
                       <div
                         style={{
                           display: "flex",
                           "justify-content": "space-between",
                           "font-weight": "bold",
+                          "font-size": "1em",
                         }}
                       >
                         <span>{item.title}</span>
@@ -850,6 +871,7 @@ const App: Component = () => {
                             type === "experience"
                               ? cv().accentColor
                               : "inherit",
+                          "font-size": "0.9em",
                         }}
                       >
                         {item.subtitle}
@@ -861,27 +883,29 @@ const App: Component = () => {
             )}
           </For>
 
-          {/* Vizuális segédvonal az oldaltöréshez (csak a képernyőn látszik) */}
+          {/* Segédvonal, ami most már reagál a margókra */}
           <div
             class="no-print"
             style={{
               position: "absolute",
-              top: "297mm",
+              top: "277mm",
               left: 0,
               right: 0,
-              border: "1px dashed #ef4444",
+              border: "2px dashed #ef4444",
               "pointer-events": "none",
+              "z-index": 100,
             }}
           >
             <span
               style={{
                 background: "#ef4444",
                 color: "white",
-                "font-size": "10px",
-                padding: "2px 5px",
+                "font-size": "11px",
+                padding: "2px 8px",
+                "font-weight": "bold",
               }}
             >
-              1. OLDAL VÉGE / PAGE 1 END
+              PRINT CUTOFF
             </span>
           </div>
         </div>
@@ -890,18 +914,20 @@ const App: Component = () => {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
         
-        @page { size: auto; margin: 0mm; }
+        @page { size: A4; margin: 0; }
 
         @media print { 
             .no-print { display: none !important; } 
             body { background: white !important; margin: 0 !important; } 
             main { padding: 0 !important; overflow: visible !important; } 
             #cv-paper { 
-              width: 100% !important; 
-              min-height: 0 !important;
+              width: 210mm !important;
+              height: 297mm !important;
               box-shadow: none !important; 
               margin: 0 !important; 
               padding: 20mm !important; 
+              box-sizing: border-box;
+              font-size: ${cv().fontSize}px !important;
             } 
         }
       `}</style>
