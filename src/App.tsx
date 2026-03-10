@@ -15,13 +15,13 @@ const translations = {
     role: "Pozíció",
     email: "Email",
     phone: "Telefon",
-    linkedin: "LinkedIn link (opcionális)",
+    linkedin: "LinkedIn link",
     summaryTitle: "Szakmai profil",
     expertiseTitle: "Készségek",
     expTitle: "Szakmai tapasztalat",
     eduTitle: "Tanulmányok",
     photoLabel: "Profilkép feltöltése",
-    photoDelete: "✕ Kép törlése",
+    photoDelete: "✕ Törlés",
     zoom: "Nagyítás",
     posX: "Vízszintes",
     posY: "Függőleges",
@@ -47,13 +47,13 @@ const translations = {
     role: "Job Title",
     email: "Email",
     phone: "Phone",
-    linkedin: "LinkedIn link (optional)",
+    linkedin: "LinkedIn link",
     summaryTitle: "Professional Profile",
     expertiseTitle: "Skills",
     expTitle: "Work Experience",
     eduTitle: "Education",
     photoLabel: "Upload Photo",
-    photoDelete: "✕ Delete Photo",
+    photoDelete: "✕ Delete",
     zoom: "Zoom",
     posX: "Horizontal",
     posY: "Vertical",
@@ -150,7 +150,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-no-header-footer");
+  const saved = localStorage.getItem("cv-pro-v10-final");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -176,7 +176,7 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-no-header-footer", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-v10-final", JSON.stringify(cv())),
   );
 
   const handlePhotoUpload = (e: Event) => {
@@ -267,7 +267,6 @@ const App: Component = () => {
               background: "#0f172a",
               color: "white",
               border: "1px solid #334155",
-              padding: "5px",
             }}
           >
             <option value="hu">HU 🇭🇺</option>
@@ -275,6 +274,7 @@ const App: Component = () => {
           </select>
         </div>
 
+        {/* --- ADATKEZELÉS --- */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().dataMgmt}</label>
           <div style={{ display: "flex", gap: "5px" }}>
@@ -304,6 +304,53 @@ const App: Component = () => {
           </div>
         </div>
 
+        {/* --- MEGJELENÉS (STÍLUSOK) --- */}
+        <div style={sectionBox}>
+          <label style={labelStyle}>{t().fontLabel}</label>
+          <select
+            value={cv().fontFamily}
+            onChange={(e) =>
+              setCv({ ...cv(), fontFamily: e.currentTarget.value })
+            }
+            style={{ ...inputStyle, "margin-bottom": "10px" }}
+          >
+            <For each={fonts}>
+              {(f) => <option value={f.value}>{f.name}</option>}
+            </For>
+          </select>
+          <div
+            style={{
+              display: "grid",
+              "grid-template-columns": "1fr 1fr",
+              gap: "10px",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>{t().textColor}</label>
+              <input
+                type="color"
+                value={cv().accentColor}
+                onInput={(e) =>
+                  setCv({ ...cv(), accentColor: e.currentTarget.value })
+                }
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t().lineColor}</label>
+              <input
+                type="color"
+                value={cv().lineColor}
+                onInput={(e) =>
+                  setCv({ ...cv(), lineColor: e.currentTarget.value })
+                }
+                style={{ width: "100%" }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* --- FOTÓ ÉS ADATOK --- */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
@@ -325,7 +372,7 @@ const App: Component = () => {
                   ...buttonStyle,
                   background: "#ef4444",
                   width: "100%",
-                  "margin-bottom": "10px",
+                  "margin-bottom": "5px",
                 }}
               >
                 {t().photoDelete}
@@ -347,43 +394,39 @@ const App: Component = () => {
                 }
                 style={{ width: "100%" }}
               />
-              <div style={{ display: "flex", gap: "5px", "margin-top": "5px" }}>
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={cv().photoSettings.x}
-                    onInput={(e) =>
-                      setCv({
-                        ...cv(),
-                        photoSettings: {
-                          ...cv().photoSettings,
-                          x: parseInt(e.currentTarget.value),
-                        },
-                      })
-                    }
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={cv().photoSettings.y}
-                    onInput={(e) =>
-                      setCv({
-                        ...cv(),
-                        photoSettings: {
-                          ...cv().photoSettings,
-                          y: parseInt(e.currentTarget.value),
-                        },
-                      })
-                    }
-                    style={{ width: "100%" }}
-                  />
-                </div>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <input
+                  type="range"
+                  min="-100"
+                  max="100"
+                  value={cv().photoSettings.x}
+                  onInput={(e) =>
+                    setCv({
+                      ...cv(),
+                      photoSettings: {
+                        ...cv().photoSettings,
+                        x: parseInt(e.currentTarget.value),
+                      },
+                    })
+                  }
+                  style={{ width: "100%" }}
+                />
+                <input
+                  type="range"
+                  min="-100"
+                  max="100"
+                  value={cv().photoSettings.y}
+                  onInput={(e) =>
+                    setCv({
+                      ...cv(),
+                      photoSettings: {
+                        ...cv().photoSettings,
+                        y: parseInt(e.currentTarget.value),
+                      },
+                    })
+                  }
+                  style={{ width: "100%" }}
+                />
               </div>
             </div>
           </Show>
@@ -637,6 +680,7 @@ const App: Component = () => {
         </div>
       </aside>
 
+      {/* --- ELŐNÉZET --- */}
       <main
         style={{
           flex: 1,
@@ -651,11 +695,14 @@ const App: Component = () => {
           id="cv-paper"
           style={{
             width: "210mm",
-            "min-height": "297mm",
+            "min-height": "297mm" /* Fix A4 magasság */,
+            height: "fit-content",
             background: "white",
             padding: "60px",
             color: "#1e293b",
             "font-family": cv().fontFamily,
+            "box-shadow": "0 10px 25px rgba(0,0,0,0.1)",
+            position: "relative",
           }}
         >
           <header
@@ -813,29 +860,48 @@ const App: Component = () => {
               </section>
             )}
           </For>
+
+          {/* Vizuális segédvonal az oldaltöréshez (csak a képernyőn látszik) */}
+          <div
+            class="no-print"
+            style={{
+              position: "absolute",
+              top: "297mm",
+              left: 0,
+              right: 0,
+              border: "1px dashed #ef4444",
+              "pointer-events": "none",
+            }}
+          >
+            <span
+              style={{
+                background: "#ef4444",
+                color: "white",
+                "font-size": "10px",
+                padding: "2px 5px",
+              }}
+            >
+              1. OLDAL VÉGE / PAGE 1 END
+            </span>
+          </div>
         </div>
       </main>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
         
-        /* ELTÜNTETI A BÖNGÉSZŐ ÁLTAL GENERÁLT FEJLÉCET ÉS LÁBLÉCET */
-        @page { 
-          size: auto; 
-          margin: 0mm; 
-        }
+        @page { size: auto; margin: 0mm; }
 
         @media print { 
             .no-print { display: none !important; } 
             body { background: white !important; margin: 0 !important; } 
             main { padding: 0 !important; overflow: visible !important; } 
-            
             #cv-paper { 
               width: 100% !important; 
+              min-height: 0 !important;
               box-shadow: none !important; 
               margin: 0 !important; 
-              padding: 20mm !important; /* Itt adjuk meg a valódi margót a papíron */
-              box-sizing: border-box;
+              padding: 20mm !important; 
             } 
         }
       `}</style>
