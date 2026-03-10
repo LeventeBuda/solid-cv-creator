@@ -40,7 +40,7 @@ const translations = {
     saveFile: "Mentés fájlba",
     loadFile: "Betöltés",
     privacyNote:
-      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage).",
+      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk és nem továbbítunk semmit.",
   },
   en: {
     title: "CV Editor",
@@ -72,7 +72,8 @@ const translations = {
     dataMgmt: "Data",
     saveFile: "Save",
     loadFile: "Load",
-    privacyNote: "Privacy: Data is stored locally.",
+    privacyNote:
+      "Privacy: Data is stored locally in your browser (LocalStorage); we do not collect any data.",
   },
 };
 
@@ -152,7 +153,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-v12-final");
+  const saved = localStorage.getItem("cv-pro-v12-final-fix");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -179,7 +180,7 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-v12-final", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-v12-final-fix", JSON.stringify(cv())),
   );
 
   const handlePhotoUpload = (e: Event) => {
@@ -277,6 +278,7 @@ const App: Component = () => {
           </select>
         </div>
 
+        {/* --- STÍLUS BEÁLLÍTÁSOK --- */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().styleTitle}</label>
           <div style={{ "margin-bottom": "15px" }}>
@@ -341,6 +343,7 @@ const App: Component = () => {
           </div>
         </div>
 
+        {/* --- ADATKEZELÉS --- */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().dataMgmt}</label>
           <div style={{ display: "flex", gap: "5px" }}>
@@ -370,7 +373,7 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* Alapadatok, Készségek, Tapasztalatok szekciók maradtak változatlanul az Index-szel fixálva */}
+        {/* Alapadatok szekció */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
@@ -684,12 +687,27 @@ const App: Component = () => {
             background: "#10b981",
             width: "100%",
             padding: "15px",
+            "margin-bottom": "10px",
           }}
         >
           {t().printBtn}
         </button>
+
+        {/* --- ADATVÉDELMI SZÖVEG --- */}
+        <div
+          style={{
+            "margin-top": "10px",
+            "font-size": "10px",
+            color: "#94a3b8",
+            "text-align": "center",
+            "line-height": "1.4",
+          }}
+        >
+          {t().privacyNote}
+        </div>
       </aside>
 
+      {/* --- ELŐNÉZET --- */}
       <main
         style={{
           flex: 1,
@@ -883,7 +901,7 @@ const App: Component = () => {
             )}
           </For>
 
-          {/* Segédvonal, ami most már reagál a margókra */}
+          {/* Nyomtatási határvonal */}
           <div
             class="no-print"
             style={{
@@ -913,9 +931,7 @@ const App: Component = () => {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
-        
         @page { size: A4; margin: 0; }
-
         @media print { 
             .no-print { display: none !important; } 
             body { background: white !important; margin: 0 !important; } 
