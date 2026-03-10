@@ -38,7 +38,7 @@ const translations = {
     saveFile: "Mentés fájlba",
     loadFile: "Betöltés",
     privacyNote:
-      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk és nem továbbítunk semmilyen adatot.",
+      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk semmit.",
   },
   en: {
     title: "CV Editor",
@@ -70,7 +70,7 @@ const translations = {
     saveFile: "Save to file",
     loadFile: "Load file",
     privacyNote:
-      "Privacy: Data is stored locally in your browser (LocalStorage); we do not collect or transmit any data.",
+      "Privacy: Data is stored locally in your browser (LocalStorage); we do not collect any data.",
   },
 };
 
@@ -108,7 +108,7 @@ const fonts = [
   { name: "Írógép (Courier)", value: '"Courier Prime", monospace' },
 ];
 
-// --- Szerkesztő stílusok ---
+// --- Stílusok ---
 const labelStyle = {
   "font-size": "11px",
   "font-weight": "bold",
@@ -151,7 +151,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-ultimate-v1");
+  const saved = localStorage.getItem("cv-pro-final-v2");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -164,8 +164,8 @@ const App: Component = () => {
           linkedin: "",
           photo: null,
           photoSettings: { scale: 1.2, x: 0, y: 0 },
-          summary: "Írd ide a szakmai profilod összefoglalóját...",
-          expertise: ["TypeScript", "Solid.js"],
+          summary: "",
+          expertise: [],
           education: [],
           experience: [],
           lang: "hu",
@@ -178,10 +178,9 @@ const App: Component = () => {
   const t = () => translations[cv().lang];
 
   createEffect(() =>
-    localStorage.setItem("cv-pro-ultimate-v1", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-final-v2", JSON.stringify(cv())),
   );
 
-  // --- Műveletek ---
   const handlePhotoUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) {
@@ -239,7 +238,7 @@ const App: Component = () => {
         "font-family": "Inter, sans-serif",
       }}
     >
-      {/* BAL PANEL: SZERKESZTŐ */}
+      {/* SZERKESZTŐ PANEL */}
       <aside
         class="no-print"
         style={{
@@ -269,7 +268,6 @@ const App: Component = () => {
               color: "white",
               border: "1px solid #334155",
               padding: "5px",
-              "border-radius": "4px",
             }}
           >
             <option value="hu">HU 🇭🇺</option>
@@ -277,18 +275,12 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* Adatkezelés & Mentés */}
         <div style={{ ...sectionBox, border: "1px dashed #4ade80" }}>
           <label style={labelStyle}>{t().dataMgmt}</label>
           <div style={{ display: "flex", gap: "10px", "margin-top": "10px" }}>
             <button
               onClick={exportData}
-              style={{
-                ...buttonStyle,
-                background: "#3b82f6",
-                flex: 1,
-                "font-size": "12px",
-              }}
+              style={{ ...buttonStyle, background: "#3b82f6", flex: 1 }}
             >
               📥 {t().saveFile}
             </button>
@@ -297,7 +289,6 @@ const App: Component = () => {
                 ...buttonStyle,
                 background: "#64748b",
                 flex: 1,
-                "font-size": "12px",
                 "text-align": "center",
                 cursor: "pointer",
               }}
@@ -313,7 +304,6 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* Megjelenés beállításai */}
         <div style={{ ...sectionBox, border: `1px solid ${cv().accentColor}` }}>
           <label style={labelStyle}>{t().fontLabel}</label>
           <select
@@ -359,13 +349,12 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* Személyes adatok */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
             type="file"
             onChange={handlePhotoUpload}
-            style={{ "margin-bottom": "15px", "font-size": "14px" }}
+            style={{ "margin-bottom": "10px" }}
           />
           <Show when={cv().photo}>
             <div
@@ -373,7 +362,6 @@ const App: Component = () => {
                 background: "#1a202c",
                 padding: "10px",
                 "border-radius": "6px",
-                "margin-bottom": "15px",
               }}
             >
               <button
@@ -382,7 +370,7 @@ const App: Component = () => {
                   ...buttonStyle,
                   background: "#ef4444",
                   width: "100%",
-                  "margin-bottom": "10px",
+                  "margin-bottom": "5px",
                 }}
               >
                 {t().photoDelete}
@@ -440,13 +428,17 @@ const App: Component = () => {
               </div>
             </div>
           </Show>
-          <label style={labelStyle}>{t().name}</label>
+          <label style={{ ...labelStyle, "margin-top": "10px" }}>
+            {t().name}
+          </label>
           <input
             value={cv().name}
             onInput={(e) => setCv({ ...cv(), name: e.currentTarget.value })}
             style={inputStyle}
           />
-          <label style={labelStyle}>{t().role}</label>
+          <label style={{ ...labelStyle, "margin-top": "10px" }}>
+            {t().role}
+          </label>
           <input
             value={cv().role}
             onInput={(e) => setCv({ ...cv(), role: e.currentTarget.value })}
@@ -467,12 +459,11 @@ const App: Component = () => {
           <input
             value={cv().linkedin}
             onInput={(e) => setCv({ ...cv(), linkedin: e.currentTarget.value })}
-            placeholder="LinkedIn link"
+            placeholder="LinkedIn"
             style={{ ...inputStyle, "margin-top": "5px" }}
           />
         </div>
 
-        {/* Szakmai profil szerkesztő */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().summaryTitle}</label>
           <textarea
@@ -482,7 +473,6 @@ const App: Component = () => {
           />
         </div>
 
-        {/* Készségek szerkesztő */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().expertiseTitle}</label>
           <form
@@ -537,7 +527,7 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* Tapasztalat & Tanulmányok szerkesztő */}
+        {/* JAVÍTOTT LISTA KEZELÉS: NINCS TÖBB FÓKUSZVESZTÉS */}
         <For each={["experience", "education"] as const}>
           {(type) => (
             <div style={sectionBox}>
@@ -556,13 +546,7 @@ const App: Component = () => {
               </div>
               <For each={cv()[type]}>
                 {(entry) => (
-                  <div
-                    style={{
-                      ...entryCard,
-                      background: "#1a202c",
-                      "margin-top": "10px",
-                    }}
-                  >
+                  <div style={entryCard}>
                     <button
                       onClick={() =>
                         setCv({
@@ -586,16 +570,31 @@ const App: Component = () => {
                       placeholder={t().placeholderTitle}
                       value={entry.title}
                       onInput={(e) =>
-                        setCv({
-                          ...cv(),
-                          [type]: cv()[type].map((i) =>
+                        setCv((prev) => ({
+                          ...prev,
+                          [type]: prev[type].map((i) =>
                             i.id === entry.id
                               ? { ...i, title: e.currentTarget.value }
                               : i,
                           ),
-                        })
+                        }))
                       }
                       style={inputStyle}
+                    />
+                    <input
+                      placeholder={t().placeholderSub}
+                      value={entry.subtitle}
+                      onInput={(e) =>
+                        setCv((prev) => ({
+                          ...prev,
+                          [type]: prev[type].map((i) =>
+                            i.id === entry.id
+                              ? { ...i, subtitle: e.currentTarget.value }
+                              : i,
+                          ),
+                        }))
+                      }
+                      style={{ ...inputStyle, "margin-top": "5px" }}
                     />
                     <div
                       style={{
@@ -608,14 +607,14 @@ const App: Component = () => {
                         type="month"
                         value={entry.startDate}
                         onInput={(e) =>
-                          setCv({
-                            ...cv(),
-                            [type]: cv()[type].map((i) =>
+                          setCv((prev) => ({
+                            ...prev,
+                            [type]: prev[type].map((i) =>
                               i.id === entry.id
                                 ? { ...i, startDate: e.currentTarget.value }
                                 : i,
                             ),
-                          })
+                          }))
                         }
                         style={inputStyle}
                       />
@@ -624,14 +623,14 @@ const App: Component = () => {
                           type="month"
                           value={entry.endDate}
                           onInput={(e) =>
-                            setCv({
-                              ...cv(),
-                              [type]: cv()[type].map((i) =>
+                            setCv((prev) => ({
+                              ...prev,
+                              [type]: prev[type].map((i) =>
                                 i.id === entry.id
                                   ? { ...i, endDate: e.currentTarget.value }
                                   : i,
                               ),
-                            })
+                            }))
                           }
                           style={inputStyle}
                         />
@@ -642,14 +641,14 @@ const App: Component = () => {
                         type="checkbox"
                         checked={entry.isCurrent}
                         onChange={(e) =>
-                          setCv({
-                            ...cv(),
-                            [type]: cv()[type].map((i) =>
+                          setCv((prev) => ({
+                            ...prev,
+                            [type]: prev[type].map((i) =>
                               i.id === entry.id
                                 ? { ...i, isCurrent: e.currentTarget.checked }
                                 : i,
                             ),
-                          })
+                          }))
                         }
                       />{" "}
                       {t().current}
@@ -673,22 +672,19 @@ const App: Component = () => {
         >
           {t().printBtn}
         </button>
-
-        {/* Adatvédelmi megjegyzés */}
         <div
           style={{
             "margin-top": "20px",
             "font-size": "10px",
             color: "#94a3b8",
             "text-align": "center",
-            "line-height": "1.4",
           }}
         >
           {t().privacyNote}
         </div>
       </aside>
 
-      {/* JOBB PANEL: ELŐNÉZET */}
+      {/* ELŐNÉZET PANEL */}
       <main
         style={{
           flex: 1,
@@ -761,7 +757,7 @@ const App: Component = () => {
                 {cv().role}
               </p>
               <div style={{ "font-size": "14px", color: "#64748b" }}>
-                <span>📧 {cv().email}</span> | <span>📞 {cv().phone}</span>
+                📧 {cv().email} | 📞 {cv().phone}
                 <Show when={cv().linkedin}>
                   <span> | 🔗 {cv().linkedin.replace(/^https?:\/\//, "")}</span>
                 </Show>
@@ -769,7 +765,6 @@ const App: Component = () => {
             </div>
           </header>
 
-          {/* 1. SZAKMAI PROFIL */}
           <Show when={cv().summary}>
             <section style={{ "margin-top": "30px" }}>
               <h3
@@ -795,7 +790,6 @@ const App: Component = () => {
             </section>
           </Show>
 
-          {/* 2. KÉSZSÉGEK */}
           <Show when={cv().expertise.length > 0}>
             <section style={{ "margin-top": "30px" }}>
               <h3
@@ -836,7 +830,6 @@ const App: Component = () => {
             </section>
           </Show>
 
-          {/* 3. TAPASZTALAT & 4. TANULMÁNYOK */}
           <For each={["experience", "education"] as const}>
             {(type) => (
               <section style={{ "margin-top": "30px" }}>
@@ -887,7 +880,6 @@ const App: Component = () => {
         </div>
       </main>
 
-      {/* Fontok & Nyomtatási stílus */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
         @page { size: auto; margin: 0mm; }
