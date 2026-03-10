@@ -153,21 +153,23 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-v12-final-fix");
+  // Új verziószám a LocalStorage-nek, hogy tiszta példaadatokkal induljon
+  const saved = localStorage.getItem("cv-pro-v13-example");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
       ? JSON.parse(saved)
       : {
-          name: "-",
-          role: "-",
-          email: "-",
-          phone: "+3630-",
-          linkedin: "",
+          name: "Példa János",
+          role: "Szoftverfejlesztő",
+          email: "janos@pelda.hu",
+          phone: "+36 30 123 4567",
+          linkedin: "linkedin.com/in/pelda-janos",
           photo: null,
           photoSettings: { scale: 1.2, x: 0, y: 0 },
-          summary: "",
-          expertise: [],
+          summary:
+            "Írj ide egy rövid összefoglalót a szakmai tapasztalataidról...",
+          expertise: ["JavaScript", "Solid.js", "TypeScript"],
           education: [],
           experience: [],
           lang: "hu",
@@ -180,7 +182,7 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-v12-final-fix", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-v13-example", JSON.stringify(cv())),
   );
 
   const handlePhotoUpload = (e: Event) => {
@@ -278,7 +280,7 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* --- STÍLUS BEÁLLÍTÁSOK --- */}
+        {/* --- MEGJELENÉS --- */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().styleTitle}</label>
           <div style={{ "margin-bottom": "15px" }}>
@@ -484,7 +486,7 @@ const App: Component = () => {
           <input
             value={cv().linkedin}
             onInput={(e) => setCv({ ...cv(), linkedin: e.currentTarget.value })}
-            placeholder="LinkedIn"
+            placeholder="LinkedIn link"
             style={{ ...inputStyle, "margin-top": "5px" }}
           />
         </div>
@@ -512,7 +514,7 @@ const App: Component = () => {
           >
             <input
               value={newSkill()}
-              onInput={(e) => setNewSkill(e.currentTarget.value)}
+              onInput={(newSkill) => setNewSkill(newSkill.currentTarget.value)}
               placeholder={t().placeholderSkill}
               style={inputStyle}
             />
@@ -692,8 +694,6 @@ const App: Component = () => {
         >
           {t().printBtn}
         </button>
-
-        {/* --- ADATVÉDELMI SZÖVEG --- */}
         <div
           style={{
             "margin-top": "10px",
@@ -707,7 +707,6 @@ const App: Component = () => {
         </div>
       </aside>
 
-      {/* --- ELŐNÉZET --- */}
       <main
         style={{
           flex: 1,
@@ -901,7 +900,6 @@ const App: Component = () => {
             )}
           </For>
 
-          {/* Nyomtatási határvonal */}
           <div
             class="no-print"
             style={{
@@ -936,15 +934,7 @@ const App: Component = () => {
             .no-print { display: none !important; } 
             body { background: white !important; margin: 0 !important; } 
             main { padding: 0 !important; overflow: visible !important; } 
-            #cv-paper { 
-              width: 210mm !important;
-              height: 297mm !important;
-              box-shadow: none !important; 
-              margin: 0 !important; 
-              padding: 20mm !important; 
-              box-sizing: border-box;
-              font-size: ${cv().fontSize}px !important;
-            } 
+            #cv-paper { width: 210mm !important; height: 297mm !important; box-shadow: none !important; margin: 0 !important; padding: 20mm !important; box-sizing: border-box; font-size: ${cv().fontSize}px !important; } 
         }
       `}</style>
     </div>
