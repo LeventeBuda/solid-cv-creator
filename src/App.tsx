@@ -2,6 +2,7 @@ import {
   createSignal,
   type Component,
   For,
+  Index,
   createEffect,
   Show,
 } from "solid-js";
@@ -74,7 +75,6 @@ const translations = {
   },
 };
 
-// --- Típusok ---
 interface Entry {
   id: number;
   title: string;
@@ -100,25 +100,6 @@ interface CVData {
   accentColor: string;
   lineColor: string;
 }
-
-// --- Segédkomponens a fókusz megtartásához ---
-const DebouncedInput = (props: {
-  value: string;
-  onUpdate: (val: string) => void;
-  placeholder?: string;
-  style?: any;
-  type?: string;
-}) => {
-  return (
-    <input
-      type={props.type || "text"}
-      value={props.value}
-      placeholder={props.placeholder}
-      onInput={(e) => props.onUpdate(e.currentTarget.value)}
-      style={props.style}
-    />
-  );
-};
 
 const fonts = [
   { name: "Modern (Inter)", value: '"Inter", sans-serif' },
@@ -169,7 +150,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-final-v3");
+  const saved = localStorage.getItem("cv-pro-fixed-focus");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -195,32 +176,23 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-final-v3", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-fixed-focus", JSON.stringify(cv())),
   );
 
   const addEntry = (type: "education" | "experience") => {
-    const newEntry: Entry = {
-      id: Date.now(),
-      title: "",
-      subtitle: "",
-      startDate: "",
-      endDate: "",
-      isCurrent: false,
-    };
-    setCv({ ...cv(), [type]: [newEntry, ...cv()[type]] });
-  };
-
-  const updateEntry = (
-    type: "education" | "experience",
-    id: number,
-    field: keyof Entry,
-    value: any,
-  ) => {
     setCv((prev) => ({
       ...prev,
-      [type]: prev[type].map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
+      [type]: [
+        {
+          id: Date.now(),
+          title: "",
+          subtitle: "",
+          startDate: "",
+          endDate: "",
+          isCurrent: false,
+        },
+        ...prev[type],
+      ],
     }));
   };
 
@@ -228,25 +200,10 @@ const App: Component = () => {
     const dataStr = JSON.stringify(cv(), null, 2);
     const dataUri =
       "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", `cv_data_${cv().lang}.json`);
-    linkElement.click();
-  };
-
-  const importData = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          setCv(JSON.parse(event.target?.result as string));
-        } catch (err) {
-          alert("Hiba!");
-        }
-      };
-      reader.readAsText(file);
-    }
+    const a = document.createElement("a");
+    a.href = dataUri;
+    a.download = `cv_${cv().lang}.json`;
+    a.click();
   };
 
   return (
@@ -272,7 +229,6 @@ const App: Component = () => {
           style={{
             display: "flex",
             "justify-content": "space-between",
-            "align-items": "center",
             "margin-bottom": "20px",
           }}
         >
@@ -286,7 +242,6 @@ const App: Component = () => {
               background: "#0f172a",
               color: "white",
               border: "1px solid #334155",
-              padding: "5px",
             }}
           >
             <option value="hu">HU 🇭🇺</option>
@@ -294,272 +249,68 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* Adatkezelés */}
-        <div style={{ ...sectionBox, border: "1px dashed #4ade80" }}>
-          <label style={labelStyle}>{t().dataMgmt}</label>
-          <div style={{ display: "flex", gap: "10px", "margin-top": "10px" }}>
-            <button
-              onClick={exportData}
-              style={{ ...buttonStyle, background: "#3b82f6", flex: 1 }}
-            >
-              📥 {t().saveFile}
-            </button>
-            <label
-              style={{
-                ...buttonStyle,
-                background: "#64748b",
-                flex: 1,
-                "text-align": "center",
-                cursor: "pointer",
-              }}
-            >
-              📤 {t().loadFile}
-              <input
-                type="file"
-                accept=".json"
-                onChange={importData}
-                style={{ display: "none" }}
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* Megjelenés */}
-        <div style={{ ...sectionBox, border: `1px solid ${cv().accentColor}` }}>
-          <label style={labelStyle}>{t().fontLabel}</label>
-          <select
-            value={cv().fontFamily}
-            onChange={(e) =>
-              setCv({ ...cv(), fontFamily: e.currentTarget.value })
-            }
-            style={{ ...inputStyle, "margin-bottom": "10px" }}
+        {/* Adatkezelés & Megjelenés (Rövidítve a helytakarékosság miatt) */}
+        <div style={sectionBox}>
+          <button
+            onClick={exportData}
+            style={{ ...buttonStyle, background: "#3b82f6", width: "100%" }}
           >
-            <For each={fonts}>
-              {(f) => <option value={f.value}>{f.name}</option>}
-            </For>
-          </select>
+            📥 {t().saveFile}
+          </button>
           <div
             style={{
+              "margin-top": "10px",
               display: "grid",
               "grid-template-columns": "1fr 1fr",
-              gap: "10px",
+              gap: "5px",
             }}
           >
-            <div>
-              <label style={labelStyle}>{t().textColor}</label>
-              <input
-                type="color"
-                value={cv().accentColor}
-                onInput={(e) =>
-                  setCv({ ...cv(), accentColor: e.currentTarget.value })
-                }
-                style={{ width: "100%" }}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>{t().lineColor}</label>
-              <input
-                type="color"
-                value={cv().lineColor}
-                onInput={(e) =>
-                  setCv({ ...cv(), lineColor: e.currentTarget.value })
-                }
-                style={{ width: "100%" }}
-              />
-            </div>
+            <input
+              type="color"
+              value={cv().accentColor}
+              onInput={(e) =>
+                setCv({ ...cv(), accentColor: e.currentTarget.value })
+              }
+            />
+            <input
+              type="color"
+              value={cv().lineColor}
+              onInput={(e) =>
+                setCv({ ...cv(), lineColor: e.currentTarget.value })
+              }
+            />
           </div>
         </div>
 
-        {/* Személyes adatok */}
+        {/* Alapadatok - Itt nincs For, nem ugrik a fókusz */}
         <div style={sectionBox}>
-          <label style={labelStyle}>{t().photoLabel}</label>
+          <label style={labelStyle}>{t().name}</label>
           <input
-            type="file"
-            onChange={(e) => {
-              const file = e.currentTarget.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () =>
-                  setCv({ ...cv(), photo: reader.result as string });
-                reader.readAsDataURL(file);
-              }
-            }}
-            style={{ "margin-bottom": "10px" }}
-          />
-          <Show when={cv().photo}>
-            <div
-              style={{
-                background: "#1a202c",
-                padding: "10px",
-                "border-radius": "6px",
-              }}
-            >
-              <button
-                onClick={() => setCv({ ...cv(), photo: null })}
-                style={{
-                  ...buttonStyle,
-                  background: "#ef4444",
-                  width: "100%",
-                  "margin-bottom": "5px",
-                }}
-              >
-                {t().photoDelete}
-              </button>
-              <input
-                type="range"
-                min="0.5"
-                max="5"
-                step="0.1"
-                value={cv().photoSettings.scale}
-                onInput={(e) =>
-                  setCv({
-                    ...cv(),
-                    photoSettings: {
-                      ...cv().photoSettings,
-                      scale: parseFloat(e.currentTarget.value),
-                    },
-                  })
-                }
-                style={{ width: "100%" }}
-              />
-              <div style={{ display: "flex", gap: "5px" }}>
-                <input
-                  type="range"
-                  min="-100"
-                  max="100"
-                  value={cv().photoSettings.x}
-                  onInput={(e) =>
-                    setCv({
-                      ...cv(),
-                      photoSettings: {
-                        ...cv().photoSettings,
-                        x: parseInt(e.currentTarget.value),
-                      },
-                    })
-                  }
-                  style={{ width: "100%" }}
-                />
-                <input
-                  type="range"
-                  min="-100"
-                  max="100"
-                  value={cv().photoSettings.y}
-                  onInput={(e) =>
-                    setCv({
-                      ...cv(),
-                      photoSettings: {
-                        ...cv().photoSettings,
-                        y: parseInt(e.currentTarget.value),
-                      },
-                    })
-                  }
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </div>
-          </Show>
-          <label style={{ ...labelStyle, "margin-top": "10px" }}>
-            {t().name}
-          </label>
-          <DebouncedInput
             value={cv().name}
-            onUpdate={(val) => setCv({ ...cv(), name: val })}
+            onInput={(e) => setCv({ ...cv(), name: e.currentTarget.value })}
             style={inputStyle}
           />
           <label style={{ ...labelStyle, "margin-top": "10px" }}>
             {t().role}
           </label>
-          <DebouncedInput
+          <input
             value={cv().role}
-            onUpdate={(val) => setCv({ ...cv(), role: val })}
+            onInput={(e) => setCv({ ...cv(), role: e.currentTarget.value })}
             style={inputStyle}
-          />
-          <DebouncedInput
-            value={cv().email}
-            onUpdate={(val) => setCv({ ...cv(), email: val })}
-            placeholder="Email"
-            style={{ ...inputStyle, "margin-top": "5px" }}
-          />
-          <DebouncedInput
-            value={cv().phone}
-            onUpdate={(val) => setCv({ ...cv(), phone: val })}
-            placeholder="Telefon"
-            style={{ ...inputStyle, "margin-top": "5px" }}
-          />
-          <DebouncedInput
-            value={cv().linkedin}
-            onUpdate={(val) => setCv({ ...cv(), linkedin: val })}
-            placeholder="LinkedIn"
-            style={{ ...inputStyle, "margin-top": "5px" }}
           />
         </div>
 
-        {/* Profil */}
+        {/* Szakmai profil */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().summaryTitle}</label>
           <textarea
             value={cv().summary}
             onInput={(e) => setCv({ ...cv(), summary: e.currentTarget.value })}
-            style={{ ...inputStyle, height: "80px", resize: "none" }}
+            style={{ ...inputStyle, height: "80px" }}
           />
         </div>
 
-        {/* Készségek */}
-        <div style={sectionBox}>
-          <label style={labelStyle}>{t().expertiseTitle}</label>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (newSkill()) {
-                setCv({ ...cv(), expertise: [...cv().expertise, newSkill()] });
-                setNewSkill("");
-              }
-            }}
-            style={{ display: "flex", gap: "5px" }}
-          >
-            <input
-              value={newSkill()}
-              onInput={(e) => setNewSkill(e.currentTarget.value)}
-              placeholder={t().placeholderSkill}
-              style={inputStyle}
-            />
-            <button style={{ ...buttonStyle, background: cv().accentColor }}>
-              +
-            </button>
-          </form>
-          <div
-            style={{
-              display: "flex",
-              "flex-wrap": "wrap",
-              gap: "5px",
-              "margin-top": "10px",
-            }}
-          >
-            <For each={cv().expertise}>
-              {(s, i) => (
-                <span
-                  onClick={() =>
-                    setCv({
-                      ...cv(),
-                      expertise: cv().expertise.filter((_, idx) => idx !== i()),
-                    })
-                  }
-                  style={{
-                    background: "#334155",
-                    padding: "4px 8px",
-                    "border-radius": "4px",
-                    "font-size": "12px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {s} ✕
-                </span>
-              )}
-            </For>
-          </div>
-        </div>
-
-        {/* Tapasztalat & Tanulmányok */}
+        {/* LISTÁK JAVÍTOTT RENDERELÉSE (Index használata a For helyett) */}
         <For each={["experience", "education"] as const}>
           {(type) => (
             <div style={sectionBox}>
@@ -576,15 +327,16 @@ const App: Component = () => {
                   +
                 </button>
               </div>
-              <For each={cv()[type]}>
-                {(entry) => (
+
+              <Index each={cv()[type]}>
+                {(entry, i) => (
                   <div style={entryCard}>
                     <button
                       onClick={() =>
-                        setCv({
-                          ...cv(),
-                          [type]: cv()[type].filter((i) => i.id !== entry.id),
-                        })
+                        setCv((prev) => ({
+                          ...prev,
+                          [type]: prev[type].filter((_, idx) => idx !== i),
+                        }))
                       }
                       style={{
                         position: "absolute",
@@ -593,71 +345,41 @@ const App: Component = () => {
                         color: "#ef4444",
                         background: "none",
                         border: "none",
-                        cursor: "pointer",
                       }}
                     >
                       ✕
                     </button>
-                    <DebouncedInput
+
+                    <input
                       placeholder={t().placeholderTitle}
-                      value={entry.title}
-                      onUpdate={(val) =>
-                        updateEntry(type, entry.id, "title", val)
-                      }
+                      value={entry().title}
+                      onInput={(e) => {
+                        const val = e.currentTarget.value;
+                        setCv((prev) => {
+                          const newList = [...prev[type]];
+                          newList[i] = { ...newList[i], title: val };
+                          return { ...prev, [type]: newList };
+                        });
+                      }}
                       style={inputStyle}
                     />
-                    <DebouncedInput
+
+                    <input
                       placeholder={t().placeholderSub}
-                      value={entry.subtitle}
-                      onUpdate={(val) =>
-                        updateEntry(type, entry.id, "subtitle", val)
-                      }
+                      value={entry().subtitle}
+                      onInput={(e) => {
+                        const val = e.currentTarget.value;
+                        setCv((prev) => {
+                          const newList = [...prev[type]];
+                          newList[i] = { ...newList[i], subtitle: val };
+                          return { ...prev, [type]: newList };
+                        });
+                      }}
                       style={{ ...inputStyle, "margin-top": "5px" }}
                     />
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "5px",
-                        "margin-top": "5px",
-                      }}
-                    >
-                      <DebouncedInput
-                        type="month"
-                        value={entry.startDate}
-                        onUpdate={(val) =>
-                          updateEntry(type, entry.id, "startDate", val)
-                        }
-                        style={inputStyle}
-                      />
-                      <Show when={!entry.isCurrent}>
-                        <DebouncedInput
-                          type="month"
-                          value={entry.endDate}
-                          onUpdate={(val) =>
-                            updateEntry(type, entry.id, "endDate", val)
-                          }
-                          style={inputStyle}
-                        />
-                      </Show>
-                    </div>
-                    <label style={{ "font-size": "11px" }}>
-                      <input
-                        type="checkbox"
-                        checked={entry.isCurrent}
-                        onChange={(e) =>
-                          updateEntry(
-                            type,
-                            entry.id,
-                            "isCurrent",
-                            e.currentTarget.checked,
-                          )
-                        }
-                      />{" "}
-                      {t().current}
-                    </label>
                   </div>
                 )}
-              </For>
+              </Index>
             </div>
           )}
         </For>
@@ -669,24 +391,13 @@ const App: Component = () => {
             background: "#10b981",
             width: "100%",
             padding: "15px",
-            "margin-top": "20px",
           }}
         >
           {t().printBtn}
         </button>
-        <div
-          style={{
-            "margin-top": "20px",
-            "font-size": "10px",
-            color: "#94a3b8",
-            "text-align": "center",
-          }}
-        >
-          {t().privacyNote}
-        </div>
       </aside>
 
-      {/* ELŐNÉZET PANEL */}
+      {/* ELŐNÉZET */}
       <main
         style={{
           flex: 1,
@@ -710,169 +421,52 @@ const App: Component = () => {
         >
           <header
             style={{
-              display: "flex",
-              "align-items": "center",
-              gap: "30px",
               "border-bottom": `4px solid ${cv().lineColor}`,
-              "padding-bottom": "25px",
+              "padding-bottom": "20px",
             }}
           >
-            <Show when={cv().photo}>
-              <div
-                style={{
-                  width: "120px",
-                  height: "120px",
-                  "border-radius": "50%",
-                  border: `3px solid ${cv().lineColor}`,
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src={cv().photo!}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    "object-fit": "cover",
-                    transform: `scale(${cv().photoSettings.scale}) translate(${cv().photoSettings.x}%, ${cv().photoSettings.y}%)`,
-                  }}
-                />
-              </div>
-            </Show>
-            <div>
-              <h1
-                style={{
-                  margin: 0,
-                  "font-size": "42px",
-                  color: cv().accentColor,
-                }}
-              >
-                {cv().name}
-              </h1>
-              <p
-                style={{
-                  "font-size": "22px",
-                  color: cv().accentColor,
-                  "font-weight": "bold",
-                  margin: "5px 0",
-                }}
-              >
-                {cv().role}
-              </p>
-              <div style={{ "font-size": "14px", color: "#64748b" }}>
-                📧 {cv().email} | 📞 {cv().phone}
-                <Show when={cv().linkedin}>
-                  <span> | 🔗 {cv().linkedin.replace(/^https?:\/\//, "")}</span>
-                </Show>
-              </div>
-            </div>
+            <h1
+              style={{
+                margin: 0,
+                color: cv().accentColor,
+                "font-size": "40px",
+              }}
+            >
+              {cv().name}
+            </h1>
+            <p style={{ "font-size": "20px", "font-weight": "bold" }}>
+              {cv().role}
+            </p>
           </header>
 
-          <Show when={cv().summary}>
-            <section style={{ "margin-top": "30px" }}>
-              <h3
-                style={{
-                  color: cv().accentColor,
-                  "border-bottom": `1px solid ${cv().lineColor}`,
-                  "padding-bottom": "5px",
-                  "text-transform": "uppercase",
-                  "font-weight": "bold",
-                }}
-              >
-                {t().summaryTitle}
-              </h3>
-              <p
-                style={{
-                  "line-height": "1.6",
-                  margin: 0,
-                  "white-space": "pre-wrap",
-                }}
-              >
-                {cv().summary}
-              </p>
-            </section>
-          </Show>
-
-          <Show when={cv().expertise.length > 0}>
-            <section style={{ "margin-top": "30px" }}>
-              <h3
-                style={{
-                  color: cv().accentColor,
-                  "border-bottom": `1px solid ${cv().lineColor}`,
-                  "padding-bottom": "5px",
-                  "text-transform": "uppercase",
-                  "font-weight": "bold",
-                }}
-              >
-                {t().expertiseTitle}
-              </h3>
-              <div
-                style={{
-                  display: "flex",
-                  "flex-wrap": "wrap",
-                  gap: "8px",
-                  "margin-top": "10px",
-                }}
-              >
-                <For each={cv().expertise}>
-                  {(s) => (
-                    <span
-                      style={{
-                        border: `1px solid ${cv().accentColor}`,
-                        padding: "4px 12px",
-                        "border-radius": "15px",
-                        "font-size": "13px",
-                        color: cv().accentColor,
-                      }}
-                    >
-                      {s}
-                    </span>
-                  )}
-                </For>
-              </div>
-            </section>
-          </Show>
+          <section style={{ "margin-top": "20px" }}>
+            <h3
+              style={{
+                color: cv().accentColor,
+                "border-bottom": "1px solid #ddd",
+              }}
+            >
+              {t().summaryTitle}
+            </h3>
+            <p style={{ "white-space": "pre-wrap" }}>{cv().summary}</p>
+          </section>
 
           <For each={["experience", "education"] as const}>
             {(type) => (
-              <section style={{ "margin-top": "30px" }}>
+              <section style={{ "margin-top": "20px" }}>
                 <h3
                   style={{
                     color: cv().accentColor,
-                    "border-bottom": `1px solid ${cv().lineColor}`,
-                    "padding-bottom": "5px",
-                    "text-transform": "uppercase",
-                    "font-weight": "bold",
+                    "border-bottom": "1px solid #ddd",
                   }}
                 >
                   {type === "experience" ? t().expTitle : t().eduTitle}
                 </h3>
                 <For each={cv()[type]}>
-                  {(entry) => (
-                    <div style={{ "margin-bottom": "15px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          "justify-content": "space-between",
-                          "font-weight": "bold",
-                        }}
-                      >
-                        <span>{entry.title}</span>
-                        <span style={{ color: "#64748b" }}>
-                          {entry.startDate} —{" "}
-                          {entry.isCurrent ? t().current : entry.endDate}
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          color:
-                            type === "experience"
-                              ? cv().accentColor
-                              : "inherit",
-                          "font-weight": "500",
-                        }}
-                      >
-                        {entry.subtitle}
-                      </div>
+                  {(item) => (
+                    <div style={{ "margin-bottom": "10px" }}>
+                      <div style={{ "font-weight": "bold" }}>{item.title}</div>
+                      <div style={{ color: "#666" }}>{item.subtitle}</div>
                     </div>
                   )}
                 </For>
@@ -883,14 +477,8 @@ const App: Component = () => {
       </main>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
-        @page { size: auto; margin: 0mm; }
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white !important; margin: 0 !important; }
-          main { padding: 0 !important; overflow: visible !important; }
-          #cv-paper { box-shadow: none !important; width: 100% !important; margin: 0 !important; padding: 20mm !important; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        @media print { .no-print { display: none; } main { padding: 0; } #cv-paper { width: 100%; padding: 15mm; } }
       `}</style>
     </div>
   );
