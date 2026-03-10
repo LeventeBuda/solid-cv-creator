@@ -38,7 +38,7 @@ const translations = {
     saveFile: "Mentés fájlba",
     loadFile: "Betöltés",
     privacyNote:
-      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk és nem továbbítunk semmit.",
+      "Adatvédelem: Az adatok csak a böngésződben tárolódnak (LocalStorage), nem gyűjtünk és nem továbbítunk semmilyen adatot.",
   },
   en: {
     title: "CV Editor",
