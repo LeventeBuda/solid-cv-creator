@@ -101,6 +101,25 @@ interface CVData {
   lineColor: string;
 }
 
+// --- Segédkomponens a fókusz megtartásához ---
+const DebouncedInput = (props: {
+  value: string;
+  onUpdate: (val: string) => void;
+  placeholder?: string;
+  style?: any;
+  type?: string;
+}) => {
+  return (
+    <input
+      type={props.type || "text"}
+      value={props.value}
+      placeholder={props.placeholder}
+      onInput={(e) => props.onUpdate(e.currentTarget.value)}
+      style={props.style}
+    />
+  );
+};
+
 const fonts = [
   { name: "Modern (Inter)", value: '"Inter", sans-serif' },
   { name: "Elegáns (Playfair)", value: '"Playfair Display", serif' },
@@ -108,7 +127,6 @@ const fonts = [
   { name: "Írógép (Courier)", value: '"Courier Prime", monospace' },
 ];
 
-// --- Stílusok ---
 const labelStyle = {
   "font-size": "11px",
   "font-weight": "bold",
@@ -151,7 +169,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-final-v2");
+  const saved = localStorage.getItem("cv-pro-final-v3");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -176,20 +194,9 @@ const App: Component = () => {
   );
 
   const t = () => translations[cv().lang];
-
   createEffect(() =>
-    localStorage.setItem("cv-pro-final-v2", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-final-v3", JSON.stringify(cv())),
   );
-
-  const handlePhotoUpload = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        setCv({ ...cv(), photo: reader.result as string });
-      reader.readAsDataURL(file);
-    }
-  };
 
   const addEntry = (type: "education" | "experience") => {
     const newEntry: Entry = {
@@ -201,6 +208,20 @@ const App: Component = () => {
       isCurrent: false,
     };
     setCv({ ...cv(), [type]: [newEntry, ...cv()[type]] });
+  };
+
+  const updateEntry = (
+    type: "education" | "experience",
+    id: number,
+    field: keyof Entry,
+    value: any,
+  ) => {
+    setCv((prev) => ({
+      ...prev,
+      [type]: prev[type].map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
+    }));
   };
 
   const exportData = () => {
@@ -219,10 +240,9 @@ const App: Component = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const importedData = JSON.parse(event.target?.result as string);
-          setCv(importedData);
+          setCv(JSON.parse(event.target?.result as string));
         } catch (err) {
-          alert("Hiba a fájl beolvasása közben!");
+          alert("Hiba!");
         }
       };
       reader.readAsText(file);
@@ -238,7 +258,6 @@ const App: Component = () => {
         "font-family": "Inter, sans-serif",
       }}
     >
-      {/* SZERKESZTŐ PANEL */}
       <aside
         class="no-print"
         style={{
@@ -275,6 +294,7 @@ const App: Component = () => {
           </select>
         </div>
 
+        {/* Adatkezelés */}
         <div style={{ ...sectionBox, border: "1px dashed #4ade80" }}>
           <label style={labelStyle}>{t().dataMgmt}</label>
           <div style={{ display: "flex", gap: "10px", "margin-top": "10px" }}>
@@ -304,6 +324,7 @@ const App: Component = () => {
           </div>
         </div>
 
+        {/* Megjelenés */}
         <div style={{ ...sectionBox, border: `1px solid ${cv().accentColor}` }}>
           <label style={labelStyle}>{t().fontLabel}</label>
           <select
@@ -349,11 +370,20 @@ const App: Component = () => {
           </div>
         </div>
 
+        {/* Személyes adatok */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().photoLabel}</label>
           <input
             type="file"
-            onChange={handlePhotoUpload}
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () =>
+                  setCv({ ...cv(), photo: reader.result as string });
+                reader.readAsDataURL(file);
+              }
+            }}
             style={{ "margin-bottom": "10px" }}
           />
           <Show when={cv().photo}>
@@ -431,39 +461,40 @@ const App: Component = () => {
           <label style={{ ...labelStyle, "margin-top": "10px" }}>
             {t().name}
           </label>
-          <input
+          <DebouncedInput
             value={cv().name}
-            onInput={(e) => setCv({ ...cv(), name: e.currentTarget.value })}
+            onUpdate={(val) => setCv({ ...cv(), name: val })}
             style={inputStyle}
           />
           <label style={{ ...labelStyle, "margin-top": "10px" }}>
             {t().role}
           </label>
-          <input
+          <DebouncedInput
             value={cv().role}
-            onInput={(e) => setCv({ ...cv(), role: e.currentTarget.value })}
+            onUpdate={(val) => setCv({ ...cv(), role: val })}
             style={inputStyle}
           />
-          <input
+          <DebouncedInput
             value={cv().email}
-            onInput={(e) => setCv({ ...cv(), email: e.currentTarget.value })}
+            onUpdate={(val) => setCv({ ...cv(), email: val })}
             placeholder="Email"
             style={{ ...inputStyle, "margin-top": "5px" }}
           />
-          <input
+          <DebouncedInput
             value={cv().phone}
-            onInput={(e) => setCv({ ...cv(), phone: e.currentTarget.value })}
+            onUpdate={(val) => setCv({ ...cv(), phone: val })}
             placeholder="Telefon"
             style={{ ...inputStyle, "margin-top": "5px" }}
           />
-          <input
+          <DebouncedInput
             value={cv().linkedin}
-            onInput={(e) => setCv({ ...cv(), linkedin: e.currentTarget.value })}
+            onUpdate={(val) => setCv({ ...cv(), linkedin: val })}
             placeholder="LinkedIn"
             style={{ ...inputStyle, "margin-top": "5px" }}
           />
         </div>
 
+        {/* Profil */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().summaryTitle}</label>
           <textarea
@@ -473,6 +504,7 @@ const App: Component = () => {
           />
         </div>
 
+        {/* Készségek */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().expertiseTitle}</label>
           <form
@@ -527,7 +559,7 @@ const App: Component = () => {
           </div>
         </div>
 
-        {/* JAVÍTOTT LISTA KEZELÉS: NINCS TÖBB FÓKUSZVESZTÉS */}
+        {/* Tapasztalat & Tanulmányok */}
         <For each={["experience", "education"] as const}>
           {(type) => (
             <div style={sectionBox}>
@@ -566,33 +598,19 @@ const App: Component = () => {
                     >
                       ✕
                     </button>
-                    <input
+                    <DebouncedInput
                       placeholder={t().placeholderTitle}
                       value={entry.title}
-                      onInput={(e) =>
-                        setCv((prev) => ({
-                          ...prev,
-                          [type]: prev[type].map((i) =>
-                            i.id === entry.id
-                              ? { ...i, title: e.currentTarget.value }
-                              : i,
-                          ),
-                        }))
+                      onUpdate={(val) =>
+                        updateEntry(type, entry.id, "title", val)
                       }
                       style={inputStyle}
                     />
-                    <input
+                    <DebouncedInput
                       placeholder={t().placeholderSub}
                       value={entry.subtitle}
-                      onInput={(e) =>
-                        setCv((prev) => ({
-                          ...prev,
-                          [type]: prev[type].map((i) =>
-                            i.id === entry.id
-                              ? { ...i, subtitle: e.currentTarget.value }
-                              : i,
-                          ),
-                        }))
+                      onUpdate={(val) =>
+                        updateEntry(type, entry.id, "subtitle", val)
                       }
                       style={{ ...inputStyle, "margin-top": "5px" }}
                     />
@@ -603,34 +621,20 @@ const App: Component = () => {
                         "margin-top": "5px",
                       }}
                     >
-                      <input
+                      <DebouncedInput
                         type="month"
                         value={entry.startDate}
-                        onInput={(e) =>
-                          setCv((prev) => ({
-                            ...prev,
-                            [type]: prev[type].map((i) =>
-                              i.id === entry.id
-                                ? { ...i, startDate: e.currentTarget.value }
-                                : i,
-                            ),
-                          }))
+                        onUpdate={(val) =>
+                          updateEntry(type, entry.id, "startDate", val)
                         }
                         style={inputStyle}
                       />
                       <Show when={!entry.isCurrent}>
-                        <input
+                        <DebouncedInput
                           type="month"
                           value={entry.endDate}
-                          onInput={(e) =>
-                            setCv((prev) => ({
-                              ...prev,
-                              [type]: prev[type].map((i) =>
-                                i.id === entry.id
-                                  ? { ...i, endDate: e.currentTarget.value }
-                                  : i,
-                              ),
-                            }))
+                          onUpdate={(val) =>
+                            updateEntry(type, entry.id, "endDate", val)
                           }
                           style={inputStyle}
                         />
@@ -641,14 +645,12 @@ const App: Component = () => {
                         type="checkbox"
                         checked={entry.isCurrent}
                         onChange={(e) =>
-                          setCv((prev) => ({
-                            ...prev,
-                            [type]: prev[type].map((i) =>
-                              i.id === entry.id
-                                ? { ...i, isCurrent: e.currentTarget.checked }
-                                : i,
-                            ),
-                          }))
+                          updateEntry(
+                            type,
+                            entry.id,
+                            "isCurrent",
+                            e.currentTarget.checked,
+                          )
                         }
                       />{" "}
                       {t().current}
