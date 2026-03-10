@@ -150,7 +150,7 @@ const buttonStyle = {
 
 const App: Component = () => {
   const [newSkill, setNewSkill] = createSignal("");
-  const saved = localStorage.getItem("cv-pro-fixed-focus");
+  const saved = localStorage.getItem("cv-pro-master-v1");
 
   const [cv, setCv] = createSignal<CVData>(
     saved
@@ -158,7 +158,7 @@ const App: Component = () => {
       : {
           name: "Kovács János",
           role: "Szoftverfejlesztő",
-          email: "janos@pelda.hu",
+          email: "pelda@email.hu",
           phone: "+36 30 123 4567",
           linkedin: "",
           photo: null,
@@ -176,7 +176,7 @@ const App: Component = () => {
 
   const t = () => translations[cv().lang];
   createEffect(() =>
-    localStorage.setItem("cv-pro-fixed-focus", JSON.stringify(cv())),
+    localStorage.setItem("cv-pro-master-v1", JSON.stringify(cv())),
   );
 
   const addEntry = (type: "education" | "experience") => {
@@ -242,6 +242,7 @@ const App: Component = () => {
               background: "#0f172a",
               color: "white",
               border: "1px solid #334155",
+              "border-radius": "4px",
             }}
           >
             <option value="hu">HU 🇭🇺</option>
@@ -249,7 +250,7 @@ const App: Component = () => {
           </select>
         </div>
 
-        {/* Adatkezelés & Megjelenés (Rövidítve a helytakarékosság miatt) */}
+        {/* Adatkezelés & Stílus */}
         <div style={sectionBox}>
           <button
             onClick={exportData}
@@ -265,24 +266,32 @@ const App: Component = () => {
               gap: "5px",
             }}
           >
-            <input
-              type="color"
-              value={cv().accentColor}
-              onInput={(e) =>
-                setCv({ ...cv(), accentColor: e.currentTarget.value })
-              }
-            />
-            <input
-              type="color"
-              value={cv().lineColor}
-              onInput={(e) =>
-                setCv({ ...cv(), lineColor: e.currentTarget.value })
-              }
-            />
+            <div>
+              <label style={labelStyle}>{t().textColor}</label>
+              <input
+                type="color"
+                value={cv().accentColor}
+                onInput={(e) =>
+                  setCv({ ...cv(), accentColor: e.currentTarget.value })
+                }
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t().lineColor}</label>
+              <input
+                type="color"
+                value={cv().lineColor}
+                onInput={(e) =>
+                  setCv({ ...cv(), lineColor: e.currentTarget.value })
+                }
+                style={{ width: "100%" }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Alapadatok - Itt nincs For, nem ugrik a fókusz */}
+        {/* Alapadatok */}
         <div style={sectionBox}>
           <label style={labelStyle}>{t().name}</label>
           <input
@@ -298,6 +307,24 @@ const App: Component = () => {
             onInput={(e) => setCv({ ...cv(), role: e.currentTarget.value })}
             style={inputStyle}
           />
+          <input
+            value={cv().email}
+            onInput={(e) => setCv({ ...cv(), email: e.currentTarget.value })}
+            placeholder="Email"
+            style={{ ...inputStyle, "margin-top": "5px" }}
+          />
+          <input
+            value={cv().phone}
+            onInput={(e) => setCv({ ...cv(), phone: e.currentTarget.value })}
+            placeholder="Telefon"
+            style={{ ...inputStyle, "margin-top": "5px" }}
+          />
+          <input
+            value={cv().linkedin}
+            onInput={(e) => setCv({ ...cv(), linkedin: e.currentTarget.value })}
+            placeholder="LinkedIn"
+            style={{ ...inputStyle, "margin-top": "5px" }}
+          />
         </div>
 
         {/* Szakmai profil */}
@@ -306,11 +333,11 @@ const App: Component = () => {
           <textarea
             value={cv().summary}
             onInput={(e) => setCv({ ...cv(), summary: e.currentTarget.value })}
-            style={{ ...inputStyle, height: "80px" }}
+            style={{ ...inputStyle, height: "80px", resize: "none" }}
           />
         </div>
 
-        {/* LISTÁK JAVÍTOTT RENDERELÉSE (Index használata a For helyett) */}
+        {/* Tapasztalat & Tanulmányok (JAVÍTOTT DÁTUMMEZŐKKEL) */}
         <For each={["experience", "education"] as const}>
           {(type) => (
             <div style={sectionBox}>
@@ -345,6 +372,7 @@ const App: Component = () => {
                         color: "#ef4444",
                         background: "none",
                         border: "none",
+                        cursor: "pointer",
                       }}
                     >
                       ✕
@@ -377,6 +405,65 @@ const App: Component = () => {
                       }}
                       style={{ ...inputStyle, "margin-top": "5px" }}
                     />
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "5px",
+                        "margin-top": "5px",
+                      }}
+                    >
+                      {/* DÁTUM MEZŐK FIXÁLVA */}
+                      <input
+                        type="month"
+                        value={entry().startDate}
+                        onInput={(e) => {
+                          const val = e.currentTarget.value;
+                          setCv((prev) => {
+                            const newList = [...prev[type]];
+                            newList[i] = { ...newList[i], startDate: val };
+                            return { ...prev, [type]: newList };
+                          });
+                        }}
+                        style={inputStyle}
+                      />
+                      <Show when={!entry().isCurrent}>
+                        <input
+                          type="month"
+                          value={entry().endDate}
+                          onInput={(e) => {
+                            const val = e.currentTarget.value;
+                            setCv((prev) => {
+                              const newList = [...prev[type]];
+                              newList[i] = { ...newList[i], endDate: val };
+                              return { ...prev, [type]: newList };
+                            });
+                          }}
+                          style={inputStyle}
+                        />
+                      </Show>
+                    </div>
+                    <label
+                      style={{
+                        "font-size": "11px",
+                        "margin-top": "5px",
+                        display: "block",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={entry().isCurrent}
+                        onChange={(e) => {
+                          const val = e.currentTarget.checked;
+                          setCv((prev) => {
+                            const newList = [...prev[type]];
+                            newList[i] = { ...newList[i], isCurrent: val };
+                            return { ...prev, [type]: newList };
+                          });
+                        }}
+                      />{" "}
+                      {t().current}
+                    </label>
                   </div>
                 )}
               </Index>
@@ -391,10 +478,24 @@ const App: Component = () => {
             background: "#10b981",
             width: "100%",
             padding: "15px",
+            "margin-top": "10px",
           }}
         >
           {t().printBtn}
         </button>
+
+        {/* ADATVÉDELMI SZÖVEG VISSZAHELYEZVE */}
+        <div
+          style={{
+            "margin-top": "20px",
+            "font-size": "10px",
+            color: "#94a3b8",
+            "text-align": "center",
+            "line-height": "1.4",
+          }}
+        >
+          {t().privacyNote}
+        </div>
       </aside>
 
       {/* ELŐNÉZET */}
@@ -421,6 +522,8 @@ const App: Component = () => {
         >
           <header
             style={{
+              display: "flex",
+              "flex-direction": "column",
               "border-bottom": `4px solid ${cv().lineColor}`,
               "padding-bottom": "20px",
             }}
@@ -434,39 +537,77 @@ const App: Component = () => {
             >
               {cv().name}
             </h1>
-            <p style={{ "font-size": "20px", "font-weight": "bold" }}>
+            <p
+              style={{
+                "font-size": "20px",
+                "font-weight": "bold",
+                margin: "5px 0",
+              }}
+            >
               {cv().role}
             </p>
+            <div style={{ "font-size": "14px", color: "#64748b" }}>
+              {cv().email} | {cv().phone}
+              <Show when={cv().linkedin}>
+                {" "}
+                | {cv().linkedin.replace(/^https?:\/\//, "")}
+              </Show>
+            </div>
           </header>
 
-          <section style={{ "margin-top": "20px" }}>
+          <section style={{ "margin-top": "25px" }}>
             <h3
               style={{
                 color: cv().accentColor,
-                "border-bottom": "1px solid #ddd",
+                "border-bottom": `1px solid ${cv().lineColor}`,
+                "text-transform": "uppercase",
               }}
             >
               {t().summaryTitle}
             </h3>
-            <p style={{ "white-space": "pre-wrap" }}>{cv().summary}</p>
+            <p style={{ "white-space": "pre-wrap", margin: 0 }}>
+              {cv().summary}
+            </p>
           </section>
 
           <For each={["experience", "education"] as const}>
             {(type) => (
-              <section style={{ "margin-top": "20px" }}>
+              <section style={{ "margin-top": "25px" }}>
                 <h3
                   style={{
                     color: cv().accentColor,
-                    "border-bottom": "1px solid #ddd",
+                    "border-bottom": `1px solid ${cv().lineColor}`,
+                    "text-transform": "uppercase",
                   }}
                 >
                   {type === "experience" ? t().expTitle : t().eduTitle}
                 </h3>
                 <For each={cv()[type]}>
                   {(item) => (
-                    <div style={{ "margin-bottom": "10px" }}>
-                      <div style={{ "font-weight": "bold" }}>{item.title}</div>
-                      <div style={{ color: "#666" }}>{item.subtitle}</div>
+                    <div style={{ "margin-bottom": "15px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          "justify-content": "space-between",
+                          "font-weight": "bold",
+                        }}
+                      >
+                        <span>{item.title}</span>
+                        <span style={{ color: "#64748b" }}>
+                          {item.startDate} —{" "}
+                          {item.isCurrent ? t().current : item.endDate}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          color:
+                            type === "experience"
+                              ? cv().accentColor
+                              : "inherit",
+                        }}
+                      >
+                        {item.subtitle}
+                      </div>
                     </div>
                   )}
                 </For>
@@ -477,8 +618,13 @@ const App: Component = () => {
       </main>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-        @media print { .no-print { display: none; } main { padding: 0; } #cv-paper { width: 100%; padding: 15mm; } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
+        @page { size: auto; margin: 0mm; }
+        @media print { 
+            .no-print { display: none !important; } 
+            main { padding: 0 !important; } 
+            #cv-paper { width: 100% !important; box-shadow: none !important; margin: 0 !important; padding: 15mm !important; } 
+        }
       `}</style>
     </div>
   );
