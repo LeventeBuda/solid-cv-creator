@@ -159,10 +159,10 @@ const App: Component = () => {
     saved
       ? JSON.parse(saved)
       : {
-          name: "Levente Buda",
-          role: "IT Support Engineer",
-          email: "levybuda@gmail.com",
-          phone: "+36301169060",
+          name: "-",
+          role: "-",
+          email: "-",
+          phone: "+3630-",
           linkedin: "",
           photo: null,
           photoSettings: { scale: 1.2, x: 0, y: 0 },
